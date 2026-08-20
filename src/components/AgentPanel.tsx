@@ -45,24 +45,26 @@ export function AgentPanel({ items, onVoegToe, onWerkBij, onVerwijder, onToggleA
     setBezig(true);
 
     try {
-      const { antwoord, actie } = await vraagAgent(nieuweBerichten, items);
+      const { antwoord, acties } = await vraagAgent(nieuweBerichten, items);
 
-      switch (actie.soort) {
-        case "verplaats": {
-          const wijzigingen: Partial<AgendaItem> = { tijd: actie.nieuweTijd };
-          if (actie.nieuweDatum) wijzigingen.datum = actie.nieuweDatum;
-          onWerkBij(actie.itemId, wijzigingen);
-          break;
+      for (const actie of acties) {
+        switch (actie.soort) {
+          case "verplaats": {
+            const wijzigingen: Partial<AgendaItem> = { tijd: actie.nieuweTijd };
+            if (actie.nieuweDatum) wijzigingen.datum = actie.nieuweDatum;
+            onWerkBij(actie.itemId, wijzigingen);
+            break;
+          }
+          case "afronden":
+            actie.itemIds.forEach(onToggleAfgerond);
+            break;
+          case "verwijderen":
+            actie.itemIds.forEach(onVerwijder);
+            break;
+          case "toevoegen":
+            onVoegToe({ ...actie.item });
+            break;
         }
-        case "afronden":
-          onToggleAfgerond(actie.itemId);
-          break;
-        case "verwijderen":
-          onVerwijder(actie.itemId);
-          break;
-        case "toevoegen":
-          onVoegToe({ ...actie.item });
-          break;
       }
 
       voegAgentBericht(antwoord);

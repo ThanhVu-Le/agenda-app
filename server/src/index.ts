@@ -46,8 +46,8 @@ interface AgendaItemIn {
 type AgendaActie =
   | { soort: "geen" }
   | { soort: "verplaats"; itemId: string; nieuweTijd: string; nieuweDatum?: string }
-  | { soort: "afronden"; itemId: string }
-  | { soort: "verwijderen"; itemId: string }
+  | { soort: "afronden"; itemIds: string[] }
+  | { soort: "verwijderen"; itemIds: string[] }
   | {
       soort: "toevoegen";
       item: {
@@ -60,13 +60,19 @@ type AgendaActie =
       };
     };
 
+interface ToolParam {
+  type: string;
+  description: string;
+  items?: { type: string };
+}
+
 interface ToolDef {
   name: string;
   description: string;
   parameters: {
     type: string;
     required?: string[];
-    properties: Record<string, { type: string; description: string }>;
+    properties: Record<string, ToolParam>;
   };
 }
 
@@ -112,23 +118,33 @@ const TOOLS: ToolDef[] = [
   },
   {
     name: "agenda_afronden",
-    description: "Markeer een bestaand agenda-item als afgerond.",
+    description:
+      "Markeer één of meerdere bestaande agenda-items als afgerond. Voor meerdere items tegelijk (bijv. 'rond alles af'): geef alle betrokken id's in één aanroep mee.",
     parameters: {
       type: "object",
-      required: ["itemId"],
+      required: ["itemIds"],
       properties: {
-        itemId: { type: "string", description: "Het id van het item dat afgevinkt moet worden." },
+        itemIds: {
+          type: "array",
+          description: "De id's van alle items die afgevinkt moeten worden (minstens 1).",
+          items: { type: "string" },
+        },
       },
     },
   },
   {
     name: "agenda_verwijderen",
-    description: "Verwijder een bestaand agenda-item.",
+    description:
+      "Verwijder één of meerdere bestaande agenda-items. Voor meerdere items tegelijk (bijv. 'verwijder alles wat nog open staat'): geef alle betrokken id's in één aanroep mee — niet meerdere losse aanroepen.",
     parameters: {
       type: "object",
-      required: ["itemId"],
+      required: ["itemIds"],
       properties: {
-        itemId: { type: "string", description: "Het id van het item dat verwijderd moet worden." },
+        itemIds: {
+          type: "array",
+          description: "De id's van alle items die verwijderd moeten worden (minstens 1).",
+          items: { type: "string" },
+        },
       },
     },
   },
@@ -154,6 +170,7 @@ function systeemPrompt(items: AgendaItemIn[]): string {
     "",
     "Instructies:",
     "- Roep ALLEEN een tool aan als de gebruiker expliciet wil dat er iets in de agenda wijzigt (item toevoegen, verplaatsen, afronden of verwijderen). Gebruik agenda_toevoegen, agenda_verplaats, agenda_afronden of agenda_verwijderen, en zoek het juiste item op basis van titel/type/context uit de lijst hierboven.",
+    "- Als de gebruiker afronden/verwijderen op MEERDERE items tegelijk vraagt (bijv. 'verwijder alles wat nog open staat', 'rond deze taken allemaal af'): bepaal ALLE betrokken item-id's uit de lijst hierboven en geef ze in ÉÉN aanroep van agenda_afronden of agenda_verwijderen mee via itemIds (een lijst met alle id's). Roep die tool niet meerdere keren apart aan — altijd één aanroep met alle betrokken id's samen. Vergeet nooit een item dat aan de voorwaarde voldoet.",
     "- Bij een vraag die alleen om informatie vraagt (bijv. 'wat staat er vandaag/morgen/deze week', 'wanneer is X') roep je GEEN tool aan — je beantwoordt de vraag direct in tekst op basis van de agenda-items hierboven, zonder iets te wijzigen of toe te voegen.",
     "- Je hebt GEEN live internettoegang en kunt niet actueel het web doorzoeken. Bij een uitzoek- of analyseverzoek (bijv. 'zoek uit welke X het beste is'): doe een inhoudelijke analyse vanuit je eigen kennis en schrijf een kort rapport met (1) je bevindingen/inschatting, en (2) concrete aanwijzingen waar en hoe de gebruiker dit zelf verder kan verifiëren of uitzoeken (bijv. welk type bronnen, welke websites, welke zoektermen). Doe NOOIT alsof je live hebt gezocht.",
     "- Overweeg na zo'n analyse het resultaat vast te leggen via agenda_toevoegen, met het rapport in het notitie-veld.",
@@ -186,15 +203,30 @@ function actieVanToolCall(name: string | undefined, args: unknown): AgendaActie 
         nieuweTijd: a.nieuweTijd,
         nieuweDatum: typeof a.nieuweDatum === "string" ? a.nieuweDatum : undefined,
       };
-    case "agenda_afronden":
-      if (typeof a.itemId !== "string") return null;
-      return { soort: "afronden", itemId: a.itemId };
-    case "agenda_verwijderen":
-      if (typeof a.itemId !== "string") return null;
-      return { soort: "verwijderen", itemId: a.itemId };
+    case "agenda_afronden": {
+      const itemIds = itemIdsUit(a);
+      if (itemIds.length === 0) return null;
+      return { soort: "afronden", itemIds };
+    }
+    case "agenda_verwijderen": {
+      const itemIds = itemIdsUit(a);
+      if (itemIds.length === 0) return null;
+      return { soort: "verwijderen", itemIds };
+    }
     default:
       return null;
   }
+}
+
+// Robuust: het model geeft meestal itemIds (array) mee zoals gevraagd, maar
+// valt soms terug op een los itemId-veld of een enkele string — vang beide op.
+function itemIdsUit(a: Record<string, unknown>): string[] {
+  if (Array.isArray(a.itemIds)) {
+    return a.itemIds.filter((v): v is string => typeof v === "string");
+  }
+  if (typeof a.itemIds === "string") return [a.itemIds];
+  if (typeof a.itemId === "string") return [a.itemId];
+  return [];
 }
 
 const BESTANDSNAMEN: Record<string, (versie: string) => string> = {
@@ -267,26 +299,31 @@ export default {
       max_tokens: 2048,
     })) as { response?: string; tool_calls?: { name?: string; arguments?: object }[] };
 
-    let actie: AgendaActie = { soort: "geen" };
+    const acties: AgendaActie[] = [];
+    for (const toolCall of eersteRespons.tool_calls ?? []) {
+      const gevondenActie = actieVanToolCall(toolCall.name, toolCall.arguments);
+      if (gevondenActie) acties.push(gevondenActie);
+    }
+
     let antwoord = eersteRespons.response ?? "";
 
-    const toolCall = eersteRespons.tool_calls?.[0];
-    if (toolCall) {
-      const gevondenActie = actieVanToolCall(toolCall.name, toolCall.arguments);
-      if (gevondenActie) actie = gevondenActie;
+    if (acties.length > 0) {
+      const rapporten = acties
+        .filter((a): a is Extract<AgendaActie, { soort: "toevoegen" }> => a.soort === "toevoegen")
+        .map((a) => a.item.notitie)
+        .filter((n): n is string => !!n && n.length > 0);
 
-      const heeftRapport =
-        actie.soort === "toevoegen" && !!actie.item.notitie && actie.item.notitie.length > 0;
+      const samenvatting = acties
+        .map((a) => ("itemIds" in a ? `${a.soort} (${a.itemIds.join(", ")})` : a.soort))
+        .join(", ");
 
-      const vervolgInstructie = heeftRapport
-        ? `[Systeem: de actie "${toolCall.name}" is uitgevoerd en het rapport is opgeslagen bij het item. Herhaal het volledige rapport (bevindingen + aanwijzingen waar/hoe verder te zoeken) nu ook in je antwoord aan de gebruiker, in het Nederlands — de gebruiker leest dit antwoord in de chat en moet het rapport daar meteen kunnen lezen.]`
-        : `[Systeem: de actie "${toolCall.name}" is uitgevoerd. Geef nu een kort, natuurlijktalig bevestigend antwoord in het Nederlands aan de gebruiker.]`;
+      const vervolgInstructie =
+        rapporten.length > 0
+          ? `[Systeem: uitgevoerd: ${samenvatting}. Rapport(en) opgeslagen bij de betreffende item(en). Herhaal het volledige rapport (bevindingen + aanwijzingen waar/hoe verder te zoeken) nu ook in je antwoord aan de gebruiker, in het Nederlands — de gebruiker leest dit antwoord in de chat en moet het rapport daar meteen kunnen lezen. Roep geen tool meer aan.]`
+          : `[Systeem: uitgevoerd: ${samenvatting}. Geef nu een kort, natuurlijktalig bevestigend antwoord in het Nederlands aan de gebruiker dat dit gebeurd is. Roep geen tool meer aan.]`;
 
       const vervolgRespons = (await env.AI.run(MODEL, {
-        messages: [
-          ...messages,
-          { role: "user", content: vervolgInstructie },
-        ],
+        messages: [...messages, { role: "user", content: vervolgInstructie }],
         max_tokens: 2048,
       })) as { response?: string };
 
@@ -295,7 +332,7 @@ export default {
 
     if (!antwoord) antwoord = "Sorry, ik kon geen antwoord genereren.";
 
-    return new Response(JSON.stringify({ antwoord, actie }), {
+    return new Response(JSON.stringify({ antwoord, acties }), {
       headers: { ...headers, "Content-Type": "application/json" },
     });
   },

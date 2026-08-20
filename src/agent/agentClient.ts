@@ -4,7 +4,7 @@ import { AGENT_ENDPOINT, AGENT_SHARED_SECRET } from "./config";
 
 export interface AgentAntwoord {
   antwoord: string;
-  actie: CommandoActie;
+  acties: CommandoActie[];
 }
 
 export async function vraagAgent(

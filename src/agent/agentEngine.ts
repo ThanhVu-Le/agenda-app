@@ -52,8 +52,8 @@ export function genereerBriefing(items: AgendaItem[]): string {
 export type CommandoActie =
   | { soort: "geen" }
   | { soort: "verplaats"; itemId: string; nieuweTijd: string; nieuweDatum?: string }
-  | { soort: "afronden"; itemId: string }
-  | { soort: "verwijderen"; itemId: string }
+  | { soort: "afronden"; itemIds: string[] }
+  | { soort: "verwijderen"; itemIds: string[] }
   | {
       soort: "toevoegen";
       item: {
