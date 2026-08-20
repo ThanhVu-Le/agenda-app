@@ -37,6 +37,11 @@ ios/App/*.xcworkspace/xcuserdata
 ios/App/*.xcodeproj/xcuserdata
 ios/App/*.xcodeproj/project.xcworkspace/xcuserdata
 
+# Agent backend (Cloudflare Worker)
+server/node_modules
+server/.wrangler
+server/.dev.vars
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
