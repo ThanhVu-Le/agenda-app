@@ -8,7 +8,9 @@ const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 const ALLOWED_ORIGINS = new Set([
   "tauri://localhost",
   "https://tauri.localhost",
+  "http://tauri.localhost",
   "capacitor://localhost",
+  "https://capacitor.localhost",
   "http://localhost:5173",
   "https://interactive-agenda.pages.dev",
 ]);
