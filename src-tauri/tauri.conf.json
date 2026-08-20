@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Mijn Agenda",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "com.blfs.mijnagenda",
   "build": {
     "frontendDist": "../dist",
@@ -41,7 +41,9 @@
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY3N0REQ0NGQURDNkZDMzkKUldRNS9NYXR6OXg5OTc1cTdBa1IwRVVOd0pwRndLek1COGRtMFNablRSbnRtVklud1ZQcy9xeVUK",
-      "endpoints": ["https://github.com/ThanhVu-Le/agenda-app/releases/latest/download/latest.json"]
+      "endpoints": [
+        "https://github.com/ThanhVu-Le/agenda-app/releases/latest/download/latest.json"
+      ]
     }
   }
 }
