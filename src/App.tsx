@@ -2,6 +2,7 @@ import { useAgenda } from "./state/useAgenda";
 import { AgendaView } from "./components/AgendaView";
 import { AgentPanel } from "./components/AgentPanel";
 import { UrgencyOverview } from "./components/UrgencyOverview";
+import { UpdateBanner } from "./components/UpdateBanner";
 
 function App() {
   const { items, voegToe, werkBij, verwijder, toggleAfgerond } = useAgenda();
@@ -12,6 +13,7 @@ function App() {
         <h1 className="font-serif text-lg font-semibold tracking-tight text-white">Mijn agenda</h1>
         <p className="text-xs uppercase tracking-wide text-white/50">Prototype · Persoonlijke agent</p>
       </header>
+      <UpdateBanner />
 
       <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6 lg:flex-row lg:items-start">
         <div className="flex-1 space-y-4 lg:order-1">

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <clipPath id="card-clip">
+      <rect x="192" y="280" width="640" height="560" rx="40" />
+    </clipPath>
+  </defs>
+
+  <rect x="0" y="0" width="1024" height="1024" fill="#10243c" />
+
+  <rect x="320" y="200" width="56" height="140" rx="18" fill="#92752e" />
+  <rect x="648" y="200" width="56" height="140" rx="18" fill="#92752e" />
+
+  <rect x="192" y="280" width="640" height="560" rx="40" fill="#ffffff" />
+  <rect x="192" y="280" width="640" height="170" fill="#10243c" clip-path="url(#card-clip)" />
+
+  <polyline
+    points="330,630 470,760 720,470"
+    fill="none"
+    stroke="#92752e"
+    stroke-width="60"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

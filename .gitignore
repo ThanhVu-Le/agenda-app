@@ -12,6 +12,31 @@ dist
 dist-ssr
 *.local
 
+# Tauri
+src-tauri/target
+src-tauri/gen
+
+# Capacitor / Android
+android/.gradle
+android/app/build
+android/build
+android/local.properties
+android/.idea
+android/*.iml
+android/app/*.iml
+android/captures
+android/app/release
+
+# Capacitor / iOS
+ios/App/Pods
+ios/App/Podfile.lock
+ios/App/build
+ios/App/DerivedData
+ios/App/CapApp-SPM/.build
+ios/App/*.xcworkspace/xcuserdata
+ios/App/*.xcodeproj/xcuserdata
+ios/App/*.xcodeproj/project.xcworkspace/xcuserdata
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

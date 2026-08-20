@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mijn Agenda</string>
+    <string name="title_activity_main">Mijn Agenda</string>
+    <string name="package_name">com.blfs.mijnagenda</string>
+    <string name="custom_url_scheme">com.blfs.mijnagenda</string>
+</resources>
