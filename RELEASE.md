@@ -15,6 +15,14 @@ Volledig geautomatiseerd zodra er getagd wordt:
 - Signing keypair staat lokaal in `%USERPROFILE%\.tauri\mijn-agenda-updater.key` — **nooit verwijderen of delen**, zonder deze sleutel kunnen geen nieuwe updates meer ondertekend worden.
 - De GitHub-repo secrets `TAURI_SIGNING_PRIVATE_KEY` en (optioneel) `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` moeten in **GitHub → Settings → Secrets and variables → Actions** staan, met de inhoud van bovenstaand keybestand.
 
+## Webversie (Cloudflare Pages)
+
+De webversie (`https://interactive-agenda.pages.dev`) update **niet** automatisch mee met een desktop-release — dat is een aparte, handmatige stap:
+
+1. `npm run deploy:web` — bouwt de webapp (`vite build`) en publiceert `dist/` naar de Cloudflare Pages-project `interactive-agenda`.
+
+Dit hoeft alleen als er iets in de UI/webcode verandert. De AI-agent-backend (`server/`, `mijn-agenda-agent.vu-thanhle.workers.dev`) heeft een eigen aparte deploystap (`cd server && npx wrangler deploy`), los van zowel de desktop-release als de webversie.
+
 ## Android (via Capacitor)
 
 Nog geen store-publicatie ingericht (geen Play Console-account). Zodra dat er is:
