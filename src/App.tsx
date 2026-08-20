@@ -13,7 +13,7 @@ function App() {
       <header className="flex items-center justify-between border-b border-gold/30 bg-navy px-4 py-3 sm:px-6">
         <div>
           <h1 className="font-serif text-lg font-semibold tracking-tight text-white">Mijn agenda</h1>
-          <p className="text-xs uppercase tracking-wide text-white/50">Prototype · Persoonlijke agent</p>
+          <p className="text-xs uppercase tracking-wide text-white/50">Persoonlijke agent</p>
         </div>
         <DownloadButton />
       </header>

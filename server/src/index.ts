@@ -10,7 +10,20 @@ const ALLOWED_ORIGINS = new Set([
   "https://tauri.localhost",
   "capacitor://localhost",
   "http://localhost:5173",
+  "https://interactive-agenda.pages.dev",
 ]);
+
+const ALLOWED_ORIGIN_SUFFIX = ".interactive-agenda.pages.dev";
+
+function origineToegestaan(origin: string | null): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  try {
+    return new URL(origin).hostname.endsWith(ALLOWED_ORIGIN_SUFFIX);
+  } catch {
+    return false;
+  }
+}
 
 interface ChatBerichtIn {
   afzender: "gebruiker" | "agent";
@@ -120,7 +133,7 @@ const TOOLS: ToolDef[] = [
 ];
 
 function corsHeaders(origin: string | null): Record<string, string> {
-  const allowOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : "";
+  const allowOrigin = origineToegestaan(origin) ? (origin as string) : "";
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
